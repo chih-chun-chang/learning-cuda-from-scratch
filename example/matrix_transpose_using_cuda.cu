@@ -4,6 +4,7 @@
 #define M 30 //cols
 #define BLOCK_SIZE 16
 
+// Matrix Transpose using shared memory
 
 // matrix transpose: 
 __global__ void matrix_transpose(float* d_mat_out, float* d_mat_in) {
