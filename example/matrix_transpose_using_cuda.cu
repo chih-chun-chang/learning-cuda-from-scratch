@@ -4,8 +4,6 @@
 #define M 30 //cols
 #define BLOCK_SIZE 16
 
-// Matrix Transpose using shared memory
-
 // matrix transpose: 
 __global__ void matrix_transpose(float* d_mat_out, float* d_mat_in) {
   int rows = blockIdx.x * blockDim.x + threadIdx.x;
@@ -16,6 +14,8 @@ __global__ void matrix_transpose(float* d_mat_out, float* d_mat_in) {
     d_mat_out[trans_pos] = d_mat_in[pos];
   }
 }
+
+// TODO: Matrix Transpose using shared memory
 
 int main(int argc, char**) {
 
