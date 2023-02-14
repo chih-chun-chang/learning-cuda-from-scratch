@@ -1,8 +1,8 @@
 #include <stdio.h>
 
-#define N 20
-#define K 30
-#define M 40
+#define N 15
+#define K 14
+#define M 13
 
 #define BLOCK_SIZE 16
 
@@ -32,8 +32,8 @@ __global__ void matmul2d_shared_memory(float* d_C, float* d_A, float* d_B) {
   __shared__ float tile_A[BLOCK_SIZE][BLOCK_SIZE];
   __shared__ float tile_B[BLOCK_SIZE][BLOCK_SIZE];
   
-  int cols = blockIdx.x * blockDim.x + threadIdx.x;
-  int rows = blockIdx.y * blockDim.y + threadIdx.y;
+  int rows = blockIdx.x * blockDim.x + threadIdx.x;
+  int cols = blockIdx.y * blockDim.y + threadIdx.y;
   float c = 0;
   
   // read matrix tile into shared memory
@@ -41,27 +41,28 @@ __global__ void matmul2d_shared_memory(float* d_C, float* d_A, float* d_B) {
   for (int t = 0; t < numTiles; t++) {
     
     // load d_A to tile_A
-    if (rows < N && (threadIdx.x + t*BLOCK_SIZE) < K) {
-      tile_A[threadIdx.y][threadIdx.x] = d_A[rows*K + threadIdx.x
+    if (rows < N && (threadIdx.y + t*BLOCK_SIZE) < K) {
+      tile_A[threadIdx.x][threadIdx.y] = d_A[rows*K + threadIdx.y
         + t*BLOCK_SIZE];
     } else {
-      tile_A[threadIdx.y][threadIdx.x] = 0;
+      tile_A[threadIdx.x][threadIdx.y] = 0;
     }
     
     // load d_B to tile_B
-    if (cols < M && (threadIdx.y + t*BLOCK_SIZE) < K) {
-      tile_B[threadIdx.y][threadIdx.x] = d_B[(threadIdx.y + t*BLOCK_SIZE)*M
+    if (cols < M && (threadIdx.x + t*BLOCK_SIZE) < K) {
+      tile_B[threadIdx.x][threadIdx.y] = d_B[(threadIdx.x + t*BLOCK_SIZE)*M
         + cols];
     } else {
-      tile_B[threadIdx.y][threadIdx.x] = 0;
+      tile_B[threadIdx.x][threadIdx.y] = 0;
     }
     
     // make sure all reads have completed
     __syncthreads();
 
+
     // mul
     for (int k = 0; k < BLOCK_SIZE; k++) {
-      c += tile_A[threadIdx.y][k] * tile_B[k][threadIdx.x];
+      c += tile_A[threadIdx.x][k] * tile_B[k][threadIdx.y];
     }
   }
   
@@ -169,7 +170,7 @@ int main(int argc, char**) {
     }
     printf("\n");
   }
-
+  
 
   
   // compare matrix if equal
