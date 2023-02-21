@@ -2,10 +2,10 @@
 
 #define N 20 //rows
 #define M 30 //cols
-#define BLOCK_SIZE 16
+#define BLOCK_SIZE 32
 
 // matrix transpose: 
-__global__ void matrix_transpose(float* d_mat_out, float* d_mat_in) {
+__global__ void matrix_transpose(float *d_mat_out, float *d_mat_in) {
   int rows = blockIdx.x * blockDim.x + threadIdx.x;
   int cols = blockIdx.y * blockDim.y + threadIdx.y;
   if (rows < N && cols < M) {
@@ -17,7 +17,9 @@ __global__ void matrix_transpose(float* d_mat_out, float* d_mat_in) {
 
 // TODO: Matrix Transpose using shared memory
 
-int main(int argc, char**) {
+// TODO: CPU version
+
+int main(int argc, char *argv[]) {
 
   // matrix size N*M
   const int MATRIX_SIZE = N * M * sizeof(float);
@@ -32,12 +34,12 @@ int main(int argc, char**) {
   }
 
   // GPU memory pointer
-  float* d_mat_in;
-  float* d_mat_out;
+  float *d_mat_in;
+  float *d_mat_out;
   
   // GPU memory allocation
-  cudaMalloc((void**) &d_mat_in, MATRIX_SIZE);
-  cudaMalloc((void**) &d_mat_out, MATRIX_SIZE);
+  cudaMalloc((void **) &d_mat_in, MATRIX_SIZE);
+  cudaMalloc((void **) &d_mat_out, MATRIX_SIZE);
 
   // Data Transfer (host -> device)
   cudaMemcpy(d_mat_in, h_mat_in, MATRIX_SIZE, cudaMemcpyHostToDevice);

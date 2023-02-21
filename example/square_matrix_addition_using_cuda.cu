@@ -15,14 +15,14 @@
 // A[index] = ...
 
 // Square Matrices Addition: C = A + B
-__global__ void matrix_addition(float* d_C, float* d_A, float* d_B) {
+__global__ void matrix_addition(float *d_C, float *d_A, float *d_B) {
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   int j = blockIdx.y * blockDim.y + threadIdx.y;
   int index = i*N + j;
   d_C[index] = d_A[index] + d_B[index];
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char *argv[]) {
 
   const int MATRIX_BYTE = N * N * sizeof(float);
 
@@ -38,14 +38,14 @@ int main(int argc, char** argv) {
   }
 
   // GPU memory pointer
-  float* d_A;
-  float* d_B;
-  float* d_C;
+  float *d_A;
+  float *d_B;
+  float *d_C;
 
   // Allocate GPU memory
-  cudaMalloc((void**) &d_A, MATRIX_BYTE);
-  cudaMalloc((void**) &d_B, MATRIX_BYTE);
-  cudaMalloc((void**) &d_C, MATRIX_BYTE);
+  cudaMalloc((void **) &d_A, MATRIX_BYTE);
+  cudaMalloc((void **) &d_B, MATRIX_BYTE);
+  cudaMalloc((void **) &d_C, MATRIX_BYTE);
 
   // Data Transfer
   cudaMemcpy(d_A, h_A, MATRIX_BYTE, cudaMemcpyHostToDevice);

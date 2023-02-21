@@ -2,7 +2,7 @@
 
 
 // kernel of vector addition: C = A + B
-__global__ void vector_addition(float* d_C, float* d_A, float* d_B) {
+__global__ void vector_addition(float *d_C, float *d_A, float *d_B) {
   int idx = threadIdx.x;
   float a = d_A[idx];
   float b = d_B[idx];
@@ -10,7 +10,7 @@ __global__ void vector_addition(float* d_C, float* d_A, float* d_B) {
 }
 
 
-int main(int argc, char** argv) {
+int main(int argc, char *argv[]) {
 
   const int VECTOR_LENGTH = 128;
   const int VECTOR_BYTES = VECTOR_LENGTH * sizeof(float);
@@ -25,14 +25,14 @@ int main(int argc, char** argv) {
   } 
 
   // GPU memory pointer for A, B, C
-  float* d_A;
-  float* d_B;
-  float* d_C;
+  float *d_A;
+  float *d_B;
+  float *d_C;
 
   // allocate GPU memory
-  cudaMalloc((void**) &d_A, VECTOR_BYTES);
-  cudaMalloc((void**) &d_B, VECTOR_BYTES);
-  cudaMalloc((void**) &d_C, VECTOR_BYTES);
+  cudaMalloc((void **) &d_A, VECTOR_BYTES);
+  cudaMalloc((void **) &d_B, VECTOR_BYTES);
+  cudaMalloc((void **) &d_C, VECTOR_BYTES);
 
   // copy data to GPU
   cudaMemcpy(d_A, h_A, VECTOR_BYTES, cudaMemcpyHostToDevice);

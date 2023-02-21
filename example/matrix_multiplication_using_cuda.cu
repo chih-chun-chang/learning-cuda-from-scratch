@@ -7,8 +7,7 @@
 // &d_B: GPU device pointer to K x M matrix B
 // &d_C: GPU device pointer to N x M matrix C to store the result
 // ------------------------------------------------------------------
-__global__ void matmul2d_cuda(int* d_A, int* d_B, int* d_C, int N, int K, int
-    M) { 
+__global__ void matmul2d_cuda(int *d_A, int *d_B, int *d_C, int N, int K, int M) { 
   int row = blockIdx.y * blockDim.y + threadIdx.y; 
   int col = blockIdx.x * blockDim.x + threadIdx.x;
   int sum = 0;
@@ -29,7 +28,7 @@ __global__ void matmul2d_cuda(int* d_A, int* d_B, int* d_C, int N, int K, int
 // &d_B: GPU device pointer to K x M matrix B
 // &d_C: GPU device pointer to N x M matrix C to store the result
 // ------------------------------------------------------------------
-__global__ void matmul2d_cuda_shared_memory(int* d_A, int* d_B, int* d_C, int
+__global__ void matmul2d_cuda_shared_memory(int *d_A, int *d_B, int *d_C, int
     N, int K, int M) {
   // shared tile size = block size
   __shared__ int tile_A[BLOCK_SIZE][BLOCK_SIZE];
@@ -71,7 +70,7 @@ __global__ void matmul2d_cuda_shared_memory(int* d_A, int* d_B, int* d_C, int
 // &h_B: CPU host pointer to K x M matrix B
 // &h_C: CPU host pointer to N x M matrix C to store the result
 // ------------------------------------------------------------------
-void matmul_cpu(int* h_A, int* h_B, int* h_C, int N, int K, int M) {
+void matmul_cpu(int *h_A, int *h_B, int *h_C, int N, int K, int M) {
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < M; j++) {
             int c = 0;
@@ -96,11 +95,11 @@ int main(int argc, char *argv[]) {
   const int size_C = N*M;
 
   // allocate memory in the CPU host RAM
-  int* h_A;
-  int* h_B;
-  int* host_C; // save the result from host CPU
-  int* device_C; // save the result from device GPU
-  int* device_C_shared;
+  int *h_A;
+  int *h_B;
+  int *host_C; // save the result from host CPU
+  int *device_C; // save the result from device GPU
+  int *device_C_shared;
   cudaMallocHost((void**) &h_A, sizeof(int)*size_A);
   cudaMallocHost((void**) &h_B, sizeof(int)*size_B);
   cudaMallocHost((void**) &host_C, sizeof(int)*size_C);
@@ -120,10 +119,10 @@ int main(int argc, char *argv[]) {
   }
 
   // Allocate memory space on the GPU device 
-  int* d_A; 
-  int* d_B;
-  int* d_C;
-  int* d_C_shared;
+  int *d_A; 
+  int *d_B;
+  int *d_C;
+  int *d_C_shared;
   cudaMalloc((void**) &d_A, sizeof(int)*size_A);
   cudaMalloc((void**) &d_B, sizeof(int)*size_B);
   cudaMalloc((void**) &d_C, sizeof(int)*size_C);
