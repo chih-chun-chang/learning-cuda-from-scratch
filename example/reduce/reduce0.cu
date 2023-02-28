@@ -1,14 +1,7 @@
 #include <iostream>
-#include <chrono>
-
 #include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
 
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
-
-#define BLOCK_SIZE 1024
+#define BLOCK_SIZE 128
 
 // Reduction #1: Interleaved Addressing
 __global__ void reduce0(int *g_idata, int *g_odata) {
@@ -18,6 +11,7 @@ __global__ void reduce0(int *g_idata, int *g_odata) {
   unsigned int tid = threadIdx.x;
   unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
   s_data[tid] = g_idata[i];
+  
   __syncthreads();
 
   // do reduction in shared mem
@@ -44,7 +38,8 @@ __global__ void reduce0(int *g_idata, int *g_odata) {
 
   // write the result for this block to global mem
   if (tid == 0)
-    g_odata[blockIdx.x] = s_data[0];
+    atomicAdd(&g_odata[0], s_data[0]);
+    //g_odata[0] += s_data[0];
 }
 
 
@@ -77,22 +72,10 @@ int main(int argc, char* argv[]) {
 
   // alocate memory in the device
   int *d_input;
-  int *d_output_reduce0;
-  int *d_output_reduce1;
-  int *d_output_reduce2;
-  int *d_output_reduce3;
-  int *d_output_reduce4;
-  int *d_output_reduce5;
-  int *d_output_reduce6;
+  int *d_output;
   
   cudaMalloc((void **) &d_input, sizeof(int)*N);
-  cudaMalloc((void **) &d_output_reduce0, sizeof(int)*N);
-  cudaMalloc((void **) &d_output_reduce1, sizeof(int));
-  cudaMalloc((void **) &d_output_reduce2, sizeof(int));
-  cudaMalloc((void **) &d_output_reduce3, sizeof(int));
-  cudaMalloc((void **) &d_output_reduce4, sizeof(int));
-  cudaMalloc((void **) &d_output_reduce5, sizeof(int));
-  cudaMalloc((void **) &d_output_reduce6, sizeof(int));
+  cudaMalloc((void **) &d_output, sizeof(int)*N);
 
   cudaMemcpy(d_input, input, sizeof(int)*N, cudaMemcpyHostToDevice);
 
@@ -107,36 +90,24 @@ int main(int argc, char* argv[]) {
   sum_by_cpu(input, &cpu_sum, N);
   cudaEventRecord(end, 0);
   cudaEventSynchronize(end);
-
   cudaEventElapsedTime(&elapsed_time_cpu, beg, end);
-
   printf("CPU time: %.3f ms \n", elapsed_time_cpu);
 
   // set grid size and block size
   unsigned int block_sz = BLOCK_SIZE;
-  unsigned int max_elems_per_block = block_sz * 2;
-  unsigned int grid_sz = 0;
-	if (N <= max_elems_per_block) {
-		grid_sz = (unsigned int)std::ceil(float(N) / float(max_elems_per_block));
-	}
-	else
-	{
-		grid_sz = N / max_elems_per_block;
-		if (N % max_elems_per_block != 0)
-			grid_sz++;
-	}
+  unsigned int grid_sz = (N + block_sz - 1) / block_sz;
 
-  printf("%d, %d, %d\n", grid_sz, block_sz, sizeof(unsigned int) *max_elems_per_block);
-  dim3 grid_size(1,1,1);
-  dim3 block_size(1024,1,1);
-  reduce0<<<1, 1024, 8192>>>(d_input, d_output_reduce0);
-  //reduce0<<<grid_sz, block_sz, sizeof(unsigned int) * max_elems_per_block>>>(d_input, d_output_reduce0);
+  // gpu
+  cudaEventRecord(beg, 0);
+  reduce0<<<grid_sz, block_sz>>>(d_input, d_output);
+  cudaMemcpy(&gpu_sum, d_output, sizeof(int), cudaMemcpyDeviceToHost);
+  cudaEventRecord(end, 0);
+  cudaEventSynchronize(end);
+  cudaEventElapsedTime(&elapsed_time_gpu, beg, end);
 
-  cudaMemcpy(output, d_output_reduce0, sizeof(int)*N, cudaMemcpyDeviceToHost);
-  
-  printf("Reduction #1() Match: %s \n", cpu_sum==output[0] ? "True" : "False");
+  printf("GPU time: %.3f ms \n", elapsed_time_gpu); 
 
-  printf("%d %d\n", cpu_sum, output[0]);
+  printf("Reduction #0() Match: %s \n", cpu_sum==gpu_sum ? "True" : "False");
 
   return 0;  
   
